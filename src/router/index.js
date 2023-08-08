@@ -2,6 +2,13 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
+  // ? Auth Routes
+  {
+    path: "/login",
+    name: "Login",
+    component: () =>
+      import(/* webpackChunkName: "loginPage" */ "@/views/Auth/LoginPage.vue"),
+  },
   {
     path: "/",
     component: () => import("@/layouts/default/Default.vue"),
@@ -22,7 +29,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
