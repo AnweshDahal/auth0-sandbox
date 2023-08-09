@@ -82,7 +82,8 @@
 
 <script>
 import DefaultView from "./View.vue";
-import { watch, onMounted, ref, onBeforeMount } from "vue";
+// ? We will use composition API for Auth0
+import { watch, onMounted, ref } from "vue";
 import { useAuth0 } from "@auth0/auth0-vue";
 
 export default {
@@ -96,6 +97,13 @@ export default {
   }),
 
   setup() {
+    /*
+     * loginWithRedirect: this is used for login
+     * logout: this is used for logout
+     * user: this returns the user's details after login
+     * isAUthenticated: checks if a user has been authenticated
+     * getAccessTokenSilently: fetches the access token of the logged in user
+     */
     const {
       loginWithRedirect,
       logout,
@@ -104,26 +112,15 @@ export default {
       getAccessTokenSilently,
     } = useAuth0();
 
+    // ? This will store the data of the access token
     const user_ = ref(null);
 
+    // ? Function to login
     const login = () => {
       loginWithRedirect();
     };
 
-    const loaded = ref(false);
-
-    onMounted(async () => {
-      try {
-        if (isAuthenticated.value) {
-          const claims = await getAccessTokenSilently();
-          user_.value = claims;
-        }
-      } catch (error) {
-        console.error("Ein Error", error);
-      }
-      loaded.value = true;
-    });
-
+    // ? Function to logout
     const logout_ = () => {
       logout({
         logoutParams: {
@@ -132,12 +129,30 @@ export default {
       });
     };
 
-    watch(user, (currentValue) => {
-      console.log(currentValue);
+    // ? UIController to display a loading screen or the page content
+    const loaded = ref(false);
+
+    // ? we fetch the access token before mounting this component
+    onMounted(async () => {
+      try {
+        if (isAuthenticated.value) {
+          // ? check if the user has been logged in
+          const claims = await getAccessTokenSilently(); // get the access token from Auth0
+          user_.value = claims; // assign the token value to user_
+        } else {
+          this.$router.push("/"); // ? if the user is not logged in you may push the user back to the login screen
+          // ! this may not work for all use cases, instead you can wait for the token and redirect the user to auth view
+        }
+      } catch (error) {
+        console.error("Ein Error", error);
+      }
+      loaded.value = true;
     });
 
-    watch(user_, (userVal) => {
-      localStorage.setItem("token", "Bearer " + userVal);
+    // watches the change to user value
+    watch(user, (currentValue) => {
+      // ? you can handle the user's data here, unless there is an error
+      // ? you will receive the details in the following format,
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -155,6 +170,13 @@ export default {
       );
     });
 
+    watch(user_, (userVal) => {
+      // ? you may require an access token for your site, thus you can handle the data here
+      // ? after this you may make calls to your API endpoints and continue as usual
+      localStorage.setItem("accessToken", userVal);
+    });
+
+    // ? You cannot access the components unless you return them
     return {
       login,
       logout: logout_,
