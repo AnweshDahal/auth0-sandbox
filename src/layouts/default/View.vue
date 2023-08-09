@@ -1,9 +1,18 @@
 <template>
   <v-main>
-    <router-view />
+    <v-progress-circular indeterminate v-if="!loaded"></v-progress-circular>
+    <router-view v-else />
   </v-main>
 </template>
 
-<script setup>
-//
+<script>
+export default {
+  name: "DefaultView",
+  props: {
+    loaded: {
+      type: Boolean,
+      default: false,
+    },
+  },
+};
 </script>

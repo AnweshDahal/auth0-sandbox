@@ -5,6 +5,7 @@
       <div class="app-menu">
         <v-menu
           location="bottom"
+          transition="slide-y-transition"
           open-on-hover
           open-delay="100"
           close-delay="100"
@@ -42,7 +43,15 @@
                       >
                     </v-list-item>
                     <v-list-item class="list-item">
-                      <v-list-item-text>My Account</v-list-item-text>
+                      <v-list-item-text
+                        ><a
+                          @click="logout"
+                          target="_blank"
+                          class="menu__link"
+                          rel="noopener noreferrer"
+                          >Logout</a
+                        ></v-list-item-text
+                      >
                     </v-list-item>
                   </v-list>
                 </v-col>
@@ -59,7 +68,7 @@
         </v-menu>
       </div>
     </header>
-    <default-view />
+    <default-view :loaded="loaded" />
     <footer class="app-footer">
       <p class="copyright">
         &copy;{{ new Date().getFullYear() }} {{ appName }}, All Rights Reserved
@@ -70,18 +79,86 @@
 
 <script>
 import DefaultView from "./View.vue";
+import { watch, onMounted, ref, onBeforeMount } from "vue";
+import { useAuth0 } from "@auth0/auth0-vue";
+
 export default {
   name: "Default",
   components: {
     "default-view": DefaultView,
   },
+
   data: () => ({
     appName: import.meta.env.VITE_APP_NAME,
   }),
-  methods: {
-    login() {
-      this.$auth0.loginWithRedirect();
-    },
+
+  setup() {
+    const {
+      loginWithRedirect,
+      logout,
+      user,
+      isAuthenticated,
+      getAccessTokenSilently,
+    } = useAuth0();
+
+    const user_ = ref(null);
+
+    const login = () => {
+      loginWithRedirect();
+    };
+
+    const loaded = ref(false);
+
+    onMounted(async () => {
+      try {
+        if (isAuthenticated.value) {
+          const claims = await getAccessTokenSilently();
+          user_.value = claims;
+        }
+      } catch (error) {
+        console.error("Ein Error", error);
+      }
+      loaded.value = true;
+    });
+
+    const logout_ = () => {
+      logout({
+        logoutParams: {
+          returnTo: window.location.origin,
+        },
+      });
+    };
+
+    watch(user, (currentValue) => {
+      console.log(currentValue);
+    });
+
+    watch(user_, (userVal) => {
+      localStorage.setItem("token", "Bearer " + userVal);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          email: user.value.email,
+          email_verified: user.value.email_verified,
+          family_name: user.value.family_name,
+          given_name: user.value.given_name,
+          locale: user.value.locale,
+          name: user.value.name,
+          nickname: user.value.nickname,
+          picture: user.value.picture,
+          sub: user.value.sub,
+          updatedAt: user.value.updatedAt,
+        })
+      );
+    });
+
+    return {
+      login,
+      logout: logout_,
+      user,
+      isAuthenticated,
+      loaded,
+    };
   },
 };
 </script>
@@ -110,7 +187,8 @@ header.app-header {
 }
 
 .menu__card {
-  min-width: 40rem;
+  min-width: 30rem;
+  margin-inline: 0px;
   border-radius: 0.8rem !important;
   margin-top: 1rem;
   padding: 2rem 1.5rem;
