@@ -1,7 +1,10 @@
 <template>
   <v-app>
     <header class="app-header">
-      <div class="app-logo">{{ appName }}</div>
+      <div class="app-logo">
+        <v-img src="@/assets/logo.svg" class="mr-3" width="48"></v-img
+        ><span>Sandbox: {{ appName }}</span>
+      </div>
       <div class="app-menu">
         <v-menu
           location="bottom"
@@ -173,6 +176,8 @@ header.app-header {
     font-size: 2rem;
     font-family: "Manrope", sans-serif;
     font-weight: 600;
+    display: flex;
+    align-items: center;
   }
 
   .app-menu {
