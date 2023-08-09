@@ -82,7 +82,7 @@
 
 <script>
 import DefaultView from "./View.vue";
-// ? We will use composition API for Auth0
+// ~> We will use composition API for Auth0
 import { watch, onMounted, ref } from "vue";
 import { useAuth0 } from "@auth0/auth0-vue";
 
@@ -98,11 +98,11 @@ export default {
 
   setup() {
     /*
-     * loginWithRedirect: this is used for login
-     * logout: this is used for logout
-     * user: this returns the user's details after login
-     * isAUthenticated: checks if a user has been authenticated
-     * getAccessTokenSilently: fetches the access token of the logged in user
+     |> loginWithRedirect: this is used for login
+     |> logout: this is used for logout
+     |> user: this returns the user's details after login
+     |> isAUthenticated: checks if a user has been authenticated
+     |> getAccessTokenSilently: fetches the access token of the logged in user
      */
     const {
       loginWithRedirect,
@@ -112,15 +112,15 @@ export default {
       getAccessTokenSilently,
     } = useAuth0();
 
-    // ? This will store the data of the access token
+    // ~> This will store the data of the access token
     const user_ = ref(null);
 
-    // ? Function to login
+    // ~> Function to login
     const login = () => {
       loginWithRedirect();
     };
 
-    // ? Function to logout
+    // ~> Function to logout
     const logout_ = () => {
       logout({
         logoutParams: {
@@ -129,19 +129,19 @@ export default {
       });
     };
 
-    // ? UIController to display a loading screen or the page content
+    // ~> UIController to display a loading screen or the page content
     const loaded = ref(false);
 
-    // ? we fetch the access token before mounting this component
+    // ~> we fetch the access token before mounting this component
     onMounted(async () => {
       try {
         if (isAuthenticated.value) {
-          // ? check if the user has been logged in
-          const claims = await getAccessTokenSilently(); // get the access token from Auth0
-          user_.value = claims; // assign the token value to user_
+          // ~> check if the user has been logged in
+          const claims = await getAccessTokenSilently(); // <== get the access token from Auth0 =<<
+          user_.value = claims; // <== assign the token value to user_ =<<
         } else {
-          this.$router.push("/"); // ? if the user is not logged in you may push the user back to the login screen
-          // ! this may not work for all use cases, instead you can wait for the token and redirect the user to auth view
+          this.$router.push("/"); // <== if the user is not logged in you may push the user back to the login screen =<<
+          // -| this may not work for all use cases, instead you can wait for the token and redirect the user to auth view |-
         }
       } catch (error) {
         console.error("Ein Error", error);
