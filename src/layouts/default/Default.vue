@@ -5,6 +5,7 @@
         <v-img src="@/assets/logo.svg" class="mr-3" width="48"></v-img
         ><span>Sandbox: {{ appName }}</span>
       </div>
+      {{ isAuthenticated }}
       <div class="app-menu">
         <v-menu
           location="bottom"
@@ -104,16 +105,10 @@ export default {
      |> isAUthenticated: checks if a user has been authenticated
      |> getAccessTokenSilently: fetches the access token of the logged in user
      */
-    const {
-      loginWithRedirect,
-      logout,
-      user,
-      isAuthenticated,
-      getAccessTokenSilently,
-    } = useAuth0();
+    const { loginWithRedirect, logout, idTokenClaims } = useAuth0();
 
     // ~> This will store the data of the access token
-    const user_ = ref(null);
+    const user = ref(null);
 
     // ~> Function to login
     const login = () => {
@@ -132,56 +127,37 @@ export default {
     // ~> UIController to display a loading screen or the page content
     const loaded = ref(false);
 
-    // ~> we fetch the access token before mounting this component
-    onMounted(async () => {
-      try {
-        if (isAuthenticated.value) {
-          // ~> check if the user has been logged in
-          const claims = await getAccessTokenSilently(); // <== get the access token from Auth0 =<<
-          user_.value = claims; // <== assign the token value to user_ =<<
-        } else {
-          this.$router.push("/"); // <== if the user is not logged in you may push the user back to the login screen =<<
-          // -| this may not work for all use cases, instead you can wait for the token and redirect the user to auth view |-
-        }
-      } catch (error) {
-        console.error("Ein Error", error);
-      }
-      loaded.value = true;
+    watch(idTokenClaims, (value) => {
+      console.log(value);
+      user.value = {
+        __raw: value.__raw,
+        given_name: value.given_name,
+        family_name: value.family_name,
+        nickname: value.nickname,
+        name: value.name,
+        picture: value.picture,
+        locale: value.locale,
+        updated_at: value.updated_at,
+        email: value.email,
+        email_verified: value.email_verified,
+        iss: value.iss,
+        aud: value.aud,
+        iat: value.iat,
+        exp: value.exp,
+        sub: value.sub,
+        sid: value.sid,
+        nonce: value.nonce,
+      };
     });
 
-    // watches the change to user value
-    watch(user, (currentValue) => {
-      // ? you can handle the user's data here, unless there is an error
-      // ? you will receive the details in the following format,
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          email: user.value.email,
-          email_verified: user.value.email_verified,
-          family_name: user.value.family_name,
-          given_name: user.value.given_name,
-          locale: user.value.locale,
-          name: user.value.name,
-          nickname: user.value.nickname,
-          picture: user.value.picture,
-          sub: user.value.sub,
-          updatedAt: user.value.updatedAt,
-        })
-      );
-    });
-
-    watch(user_, (userVal) => {
-      // ? you may require an access token for your site, thus you can handle the data here
-      // ? after this you may make calls to your API endpoints and continue as usual
-      localStorage.setItem("accessToken", userVal);
+    watch(user, (userValue) => {
+      localStorage.setItem("token", userValue.__raw);
     });
 
     // ? You cannot access the components unless you return them
     return {
       login,
       logout: logout_,
-      user,
-      isAuthenticated,
       loaded,
     };
   },
